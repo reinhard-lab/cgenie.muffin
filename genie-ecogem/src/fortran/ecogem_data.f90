@@ -343,7 +343,7 @@ CONTAINS
           silicify(jp)    = 1.0
           autotrophy(jp)  = 1.0
           heterotrophy(jp)= 0.0
-          palatability(jp)= 1.0
+          palatability(jp)= 0.5
        elseif (pft(jp).eq.'coccolithophore') then
           NO3up(jp)       = 1.0
           Nfix(jp)        = 0.0

@@ -366,7 +366,6 @@ subroutine ecogem(          &
                           GrazPreyEaten(io,jprey) = GrazPreyEaten(io,jprey) + BioC(jpred) * GrazMat(io,jpred,jprey)
                        enddo
                     enddo
-
                     if (io.eq.iCarb) then
                        assimilated(io,:) = ass_eff * VLlimit(:) ! assimilate less carbon if predator is nutrient limited
                     elseif (io.le.iomax) then
@@ -374,8 +373,21 @@ subroutine ecogem(          &
                     elseif (io.eq.iChlo) then
                        assimilated(io,:) = 0.0                  ! don't assimilate chlorophyll
                     endif
+                    do jpred=1,npmax
+                       if (io.eq.iSili .and. pft(jpred).eq.'zooplankton') then ! .and. silicify(:).eq.0.0) then
+		          assimilated(io,jpred) = 0.0                  ! don't assimilate Si if not selected - Scott April 2019
+                       endif
+                    enddo  
                     unassimilated(:,:) = 1.0 - assimilated(:,:)
+           do jpred=1,npmax
+              if (io.eq.iSili) then
+                 write(*,*) "jpred=", jpred, "assimilated(io,:)=", assimilated(io,jpred), "unassimilated", unassimilated(io,jpred) !! Fanny - debugging
+              endif
+           enddo
+
                  enddo
+
+
                  !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
                  ! ---------------------------------------------------------- !
