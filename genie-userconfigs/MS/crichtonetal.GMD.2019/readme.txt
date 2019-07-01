@@ -7,6 +7,7 @@ K.A.Crichton, J.D.Wilson, A.Ridgwell, P.N.Pearson
 
 ################################################################
 25/06/2019 -- README.txt file creation (K.A.C)
+30/06/2019 -- edited (AR)
 ################################################################
 
 Provided is the code used to create the model experiments presented in the paper.
@@ -28,7 +29,6 @@ All experiments are run from:$HOME/cgenie.muffin/genie-main
 ###### model settings ######
  
 [letter] : Ea1 setting
-a	50000
 b	55000
 c	60000
 d	53000
