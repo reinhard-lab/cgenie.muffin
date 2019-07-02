@@ -7,10 +7,10 @@ ea_36=y
 #
 # --- BIOLOGICAL NEW PRODUCTION ---------------------------------------
 #
-# production without temperature dependence [DEFAULT]
-bg_par_bio_prodopt='1N1T_PO4MM'
-# maximum rate of conversion of dissolved PO4 into organic matter by phytoplankton (mol kg-1 yr-1)
-bg_par_bio_k0_PO4=8.9876e-006
+# production with temperature dependence
+bg_par_bio_prodopt='1N1T_PO4MM_Tdep'
+# max growth rate term (multiplier)
+bg_par_bio_mu1=10
 # [PO4] M-M half-sat value (mol kg-1)
 bg_par_bio_c0_PO4=8.9369e-007
 #
@@ -42,6 +42,14 @@ bg_par_bio_remin_CaCO3_frac2=0.45
 bg_par_bio_remin_CaCO3_eL1=1.8905e+003
 # remineralization length #2 for CaCO3
 bg_par_bio_remin_CaCO3_eL2=1000000.0
+# add T-dependent remin and modify frac2
+bg_ctrl_bio_remin_POC_fixed=.false.
+bg_par_bio_remin_sinkingrate=125.0
+bg_par_bio_remin_POC_K1=9.0E11
+bg_par_bio_remin_POC_Ea1=54000.0
+bg_par_bio_remin_POC_K2=1.0E14
+bg_par_bio_remin_POC_Ea2=80000.0
+bg_par_bio_remin_POC_frac2=0.008
 #
 # --- DATA SAVING -----------------------------------------------------
 #
