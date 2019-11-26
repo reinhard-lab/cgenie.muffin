@@ -561,9 +561,54 @@ CONTAINS
     pred_diam(:,1)=diameter(:) ! standard  prey diameter vector
     prey_diam(1,:)=diameter(:) ! transpose pred diameter vector
     prdpry(:,:)   =matmul(pred_diam,1.0/prey_diam)
-    gkernel(:,:)  =exp(-log(prdpry(:,:)/ppopt_mat(:,:))**2 / (2*ppsig_mat(:,:)**2)) ! [jpred,jprey]
+    gkernel(:,:)  =exp(-log(prdpry(:,:)/ppopt_mat(:,:))**2 / (2*ppsig_mat(:,:)**2)) ! [jpred,jprey] populate whole array at once, then find exceptions to set to 0.0 based on type
     gkernel(:,:)  =merge(gkernel(:,:),0.0,gkernel(:,:).gt.1e-2) ! set kernel<1e-2 to 0.0
     gkernelT(:,:) =transpose(gkernel(:,:))
+    
+    ! grazing matrix Maria/Jamie/Fanny - Nov19
+    do jpred=1,npmax
+	do jprey=1,npmax
+		select case(pft(jpred))
+			case('phytoplankton')
+				gkernel(jpred,jprey)=0.0
+			case('zooplankton','foram')
+				select case(pft(jprey))
+					case('phytoplankton')
+						if(carnivory(jpred).gt.0.0) gkernel(jpred,jprey)=0.0 ! if predator is carnivorous and prey is phytoplankton, - no grazing
+					case('zooplankton', 'foram')
+						if(herbivory(jpred).gt.0.0) gkernel(jpred,jprey)=0.0 ! if predator is herbivorous and prey is zooplanktonn - no grazing
+				end select
+		end select
+	end do
+    end do
+    
+    ! write out grazing matrix    
+    do jpred=1,npmax
+	do jprey=1,npmax-1
+		WRITE(303,101,ADVANCE = "NO" ),gkernel(jpred,jprey)
+       enddo
+       WRITE(303,101,ADVANCE = "YES" ),gkernel(jpred,npmax)
+    end do
+    close(303)
+
+	
+
+     ! grazing matrix WARD17 copy
+    ! do jpred=1,npmax
+    ! print*,jpred,jprey
+    !    if (heterotrophy(jpred).le.0.0) then
+    !       gkernel(jpred,:) = 0.0
+     !       endif
+    !    endif
+    !    do jprey=1,npmax-1
+    !       WRITE(303,101,ADVANCE = "NO" ),gkernel(jpred,jprey)
+    !    enddo
+    !    WRITE(303,101,ADVANCE = "YES" ),gkernel(jpred,npmax)
+    ! enddo
+    ! close(303)
+    ! ****************************************************************************************
+    ! ****************************************************************************************
+
 
     ! detrital partitioning
     beta_graz(:) =beta_graz_a - (beta_graz_a-beta_graz_b) / (1.0+beta_mort_c/diameter(:))
@@ -629,51 +674,6 @@ CONTAINS
     close(301)
     close(302)
     
-    ! grazing matrix JDW
-    gkernel(:,:)  =exp(-log(prdpry(:,:)/ppopt_mat(:,:))**2 / (2*ppsig_mat(:,:)**2)) ! [jpred,jprey] populate whole array at once, then find exceptions to set to 0.0 based on type
-    do jpred=1,npmax
-	do jprey=1,npmax
-		select case(pft(jpred))
-			case('phytoplankton')
-				gkernel(jpred,jprey)=0.0
-			case('zooplankton','foram')
-				select case(pft(jprey))
-					case('phytoplankton')
-						if(carnivory(jpred).gt.0.0) gkernel(jpred,jprey)=0.0 ! if predator is carnivorous and prey is phytoplankton, - no grazing
-					case('zooplankton', 'foram')
-						if(herbivory(jpred).gt.0.0) gkernel(jpred,jprey)=0.0 ! if predator is herbivorous and prey is zooplanktonn - no grazing
-				end select
-		end select
-	end do
-    end do
-    
-    ! write out grazing matrix    
-    do jpred=1,npmax
-	do jprey=1,npmax-1
-		WRITE(303,101,ADVANCE = "NO" ),gkernel(jpred,jprey)
-       enddo
-       WRITE(303,101,ADVANCE = "YES" ),gkernel(jpred,npmax)
-    end do
-    close(303)
-
-	
-
-     ! grazing matrix WARD17 copy
-    ! do jpred=1,npmax
-    ! print*,jpred,jprey
-    !    if (heterotrophy(jpred).le.0.0) then
-    !       gkernel(jpred,:) = 0.0
-     !       endif
-    !    endif
-    !    do jprey=1,npmax-1
-    !       WRITE(303,101,ADVANCE = "NO" ),gkernel(jpred,jprey)
-    !    enddo
-    !    WRITE(303,101,ADVANCE = "YES" ),gkernel(jpred,npmax)
-    ! enddo
-    ! close(303)
-    ! ****************************************************************************************
-    ! ****************************************************************************************
-
     !-------------------------------------------------
     ! convert all rates form per day to per second
     vmax(:,:)     = vmax(:,:)     / pday
