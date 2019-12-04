@@ -71,6 +71,7 @@ subroutine biogem(        &
   real::loc_force_actual
   real::loc_force_actual_d13C
   real::loc_force_actual_d44Ca
+  real::loc_force_actual_h
   real::loc_r18O
   real::loc_remin
   real,dimension(1:n_l_ocn)::loc_vocn                            !
@@ -189,6 +190,7 @@ subroutine biogem(        &
      loc_force_actual          = 0.0
      loc_force_actual_d13C     = 0.0
      loc_force_actual_d44Ca    = 0.0
+     loc_force_actual_h        = 0.0
      !
      DO i=1,n_i
         DO j=1,n_j
@@ -240,14 +242,13 @@ subroutine biogem(        &
               ! NOTE: the 'red' tracer is used to set a time history of ocean surface pH
               !       the 'blue' tracer is used to set a time history of saturation state
               IF (force_restore_ocn_select(io_ALK) .AND. force_flux_ocn_select(io_ALK)) THEN
-                 IF (force_restore_ocn_select(io_colr)) THEN
-                    loc_force_actual = loc_force_actual + loc_k_icefree*carb(ic_H,i,j,n_k)/loc_k_tot_icefree
+                 if (force_restore_ocn_select(io_colr)) THEN
+                    loc_force_actual_h = loc_force_actual_h + loc_k_icefree*carb(ic_H,i,j,n_k)/loc_k_tot_icefree
+                 end if
+                 if (ctrl_force_ohmega_calcite) then
+                    loc_force_actual = loc_force_actual + loc_k_icefree*carb(ic_ohm_cal,i,j,n_k)/loc_k_tot_icefree
                  else
-                    if (ctrl_force_ohmega_calcite) then
-                       loc_force_actual = loc_force_actual + loc_k_icefree*carb(ic_ohm_cal,i,j,n_k)/loc_k_tot_icefree
-                    else
-                       loc_force_actual = loc_force_actual + loc_k_icefree*carb(ic_ohm_arg,i,j,n_k)/loc_k_tot_icefree
-                    end if
+                    loc_force_actual = loc_force_actual + loc_k_icefree*carb(ic_ohm_arg,i,j,n_k)/loc_k_tot_icefree
                  end if
               elseif (force_flux_atm_select(ia_pCO2) .AND. force_flux_atm_select(ia_pCO2_13C)) THEN
                  IF (force_restore_ocn_select(io_colr)) THEN
@@ -263,12 +264,14 @@ subroutine biogem(        &
                  if (force_restore_ocn_select(io_DIC_13C)) then
                     loc_standard = const_standards(ocn_type(io_DIC_13C))
                     loc_force_actual_d13C = loc_force_actual_d13C + loc_k_icefree*&
-                         & fun_calc_isotope_delta(ocn(io_DIC,i,j,n_k),ocn(io_DIC_13C,i,j,n_k),loc_standard,.FALSE.,const_real_null)/&
+                         & fun_calc_isotope_delta(ocn(io_DIC,i,j,n_k),ocn(io_DIC_13C,i,j,n_k), &
+                         & loc_standard,.FALSE.,const_real_null)/&
                          & loc_k_tot_icefree
                  elseif (force_restore_ocn_select(io_DOM_C_13C)) then
                     loc_standard = const_standards(ocn_type(io_DOM_C_13C))
                     loc_force_actual_d13C = loc_force_actual_d13C + loc_k_icefree*&
-                         & fun_calc_isotope_delta(ocn(io_DOM_C,i,j,n_k),ocn(io_DOM_C_13C,i,j,n_k),loc_standard,.FALSE.,const_real_null)/&
+                         & fun_calc_isotope_delta(ocn(io_DOM_C,i,j,n_k),ocn(io_DOM_C_13C,i,j,n_k), &
+                         & loc_standard,.FALSE.,const_real_null)/&
                          & loc_k_tot_icefree
                  end if
               end IF
@@ -902,8 +905,50 @@ subroutine biogem(        &
                     IF (force_flux_ocn_select(io_Ca)) then
                        locijk_focn(io_Ca,i,j,n_k) = loc_force_sign*force_flux_locn(io2l(io_Ca),i,j,n_k)
                     end if
+                 elseif (force_restore_ocn_select(io_colr) .AND. force_restore_ocn_select(io_colb)) THEN
+                    ! (1b) ocean ALK + DIC [SURFACE OCEAN CHEMISTRY SPINUP/INVERSION]
+!print*,'***'
+                    ! first adjust pH ...
+                    loc_force_target = force_restore_locn(io2l(io_colr),i,j,n_k)
+                    If (-log10(loc_force_actual_h) > loc_force_target) then
+                       loc_force_sign = 1.0
+                    else
+                       if (ctrl_force_invert_noneg) then
+                          loc_force_sign = 0.0
+                       else
+                          loc_force_sign = -1.0
+                       end if
+                    end If
+!print*,loc_force_target,-log10(loc_force_actual_h)
+                    DO k=loc_k1,n_k
+                       IF (force_flux_ocn_select(io_DIC)) then
+                          locijk_focn(io_DIC,i,j,k) = loc_force_sign*force_flux_locn(io2l(io_DIC),i,j,k)
+                       end if
+                       IF (force_flux_ocn_select(io_DIC_13C)) then
+                          locijk_focn(io_DIC_13C,i,j,k) = loc_force_sign*force_flux_locn(io2l(io_DIC_13C),i,j,k)
+                       end if
+                    END DO
+!print*,loc_force_target,loc_force_actual_h,force_flux_locn(io2l(io_DIC),i,j,k),locijk_focn(io_DIC,i,j,k)
+                    ! ... now for saturation
+                    loc_force_target = force_restore_locn(io2l(io_colb),i,j,n_k)
+                    If (loc_force_actual < loc_force_target) then
+                       loc_force_sign = 1.0
+                    else
+                       if (ctrl_force_invert_noneg) then
+                          loc_force_sign = 0.0
+                       else
+                          loc_force_sign = -1.0
+                       end if
+                    end If
+                    DO k=loc_k1,n_k
+                       locijk_focn(io_ALK,i,j,k) = loc_force_sign*force_flux_locn(io2l(io_ALK),i,j,k)
+                       IF (force_flux_ocn_select(io_Ca)) then
+                          locijk_focn(io_Ca,i,j,k) = loc_force_sign*force_flux_locn(io2l(io_Ca),i,j,k)
+                       end if
+                    END DO
+!print*,loc_force_target,loc_force_actual,force_flux_locn(io2l(io_ALK),i,j,k),locijk_focn(io_ALK,i,j,k)
                  else
-                    ! (1b) ocean ALK [GEOENGINEEGING of SURFACE OCEAN CHEMISTRY]
+                    ! (1c) ocean ALK [GEOENGINEEGING of SURFACE OCEAN CHEMISTRY]
                     ! NOTE: the 'red' tracer is used to set a time history of ocean surface pH
                     !       the 'blue' tracer is used to set a time history of saturation state
                     !       otherwise employ fixed target
@@ -925,7 +970,7 @@ subroutine biogem(        &
                     ! calculate the sign of the ALK (and DIC and Ca2+) input
                     ! NOTE: remember that higher pH requires *more* ALK ;)
                     IF (force_restore_ocn_select(io_colr)) THEN
-                       If (loc_force_target > -log10(loc_force_actual)) then
+                       If (loc_force_target > -log10(loc_force_actual_h)) then
                           loc_force_sign = 1.0
                        else
                           if (ctrl_force_invert_noneg) then
@@ -963,6 +1008,7 @@ subroutine biogem(        &
                  diag_misc_2D(idiag_misc_2D_FDIC,i,j)     = sum(locijk_focn(io_DIC,i,j,:))
                  diag_misc_2D(idiag_misc_2D_FDIC_13C,i,j) = sum(locijk_focn(io_DIC_13C,i,j,:))
                  diag_misc_2D(idiag_misc_2D_FCa,i,j)      = sum(locijk_focn(io_Ca,i,j,:))
+!print*,diag_misc_2D(idiag_misc_2D_FALK,i,j),diag_misc_2D(idiag_misc_2D_FDIC,i,j)
               else
                  ! ------------------------------------------- !
                  ! (2) ATMOSPHERIC pCO2 INVERSIONS
@@ -1219,7 +1265,7 @@ subroutine biogem(        &
                        end if
                        ! calculate the sign of the CO2 input
                        ! NOTE: remember that lower pH requires *more* CO2 ;)
-                       If (loc_force_target < -log10(loc_force_actual)) then
+                       If (loc_force_target < -log10(loc_force_actual_h)) then
                           loc_force_sign = 1.0
                        else
                           if (ctrl_force_invert_noneg) then
