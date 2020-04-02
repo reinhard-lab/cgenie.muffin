@@ -358,7 +358,7 @@
                         <description></description>
                     </param>
                     <param name="debug_loop">
-                        <value datatype="integer">2</value>
+                        <value datatype="integer">1</value>
                         <description></description>
                     </param>
                     <param name="debug_end">
@@ -899,7 +899,7 @@
                         </param>
                   </paramArray>
 <!-- sed_select -->
-                   <paramArray name="sed_select" dimension="1" extent="99">
+                   <paramArray name="sed_select" dimension="1" extent="107">
                         <description>tracer selection</description>    
                         <param name="sed_select(1)" index="1">
                             <value datatype="boolean">.false.</value>
@@ -1317,6 +1317,18 @@
                             <value datatype="boolean">.false.</value>
                             <description></description>
                         </param>
+                        <param name="sed_select(105)" index="105">
+                            <value datatype="boolean">.false.</value>
+                            <description></description>
+                        </param>
+                        <param name="sed_select(106)" index="106">
+                            <value datatype="boolean">.false.</value>
+                            <description></description>
+                        </param>
+                        <param name="sed_select(107)" index="107">
+                            <value datatype="boolean">.false.</value>
+                            <description></description>
+                        </param>
                   </paramArray>
 <!-- GEOCHEM CONTROLS  -->
                     <param name="par_carbconstset_name">
@@ -1334,6 +1346,10 @@
                     <param name="ctrl_carbchem_fail">
                         <value datatype="boolean">.true.</value>
                         <description>exit upon pH solution failure?</description>
+                    </param>
+                    <param name="ctrl_carbchem_noH3SiO4">
+                        <value datatype="boolean">.false.</value>
+                        <description>Ignore H3SiO4 in the calculation of carbonate ALK?</description>
                     </param>
                     <param name="par_geochem_Tmin">
                         <value datatype="real">0.0</value>
@@ -2665,6 +2681,10 @@
                         <value datatype="real">5000.0</value>
                         <description>ocean depth scale (m)</description>
                     </param>
+                    <param name="par_dk">
+                        <value datatype="integer">0</value>
+                        <description>Additional ocean layers (deeper than go_par_dsc)</description>
+                    </param>
                 </namelist>
             </file>
         </model>
@@ -3987,6 +4007,10 @@
 			<value datatype="boolean">.false.</value>
                         <description>Full (entire grid) carbonate chem update?</description>
                     </param>
+                    <param name="par_bio_geochem_tau">
+			<value datatype="real">0.001</value>
+                        <description>geochem reaction completion time-scale (days)</description>
+                    </param>
 <!-- BOUNDARY CONDITIONS  -->
                     <param name="ctrl_force_sed_closedsystem">
 			<value datatype="boolean">.true.</value>
@@ -3995,6 +4019,10 @@
                     <param name="ctrl_force_sed_closed_P">
 			<value datatype="boolean">.false.</value>
                         <description>Balance the P cycle (with weathering)?</description>
+                    </param>
+                    <param name="ctrl_force_sed_reflective_POM">
+			<value datatype="boolean">.false.</value>
+                        <description>Set reflective boundary condition for POM? </description>
                     </param>
                     <param name="ctrl_force_GOLDSTEInTS">
 			<value datatype="boolean">.true.</value>
@@ -4200,6 +4228,10 @@
                     <param name="par_bio_kT_eT">
 			<value datatype="real">15.8</value>
                         <description>e-folding temperature (K) for T-dep. uptake rate modifier</description>
+                    </param>
+                    <param name="par_bio_kT_dT">
+			<value datatype="real">0.0</value>
+                        <description>temperature offset for T-dependent bio schemes</description>
                     </param>
 <!-- ORGANIC MATTER EXPORT RATIOS  -->
                     <param name="par_bio_red_POP_PON">
@@ -4407,6 +4439,22 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                     <param name="par_bio_remin_gammaCH4">
             <value datatype="real">1.20</value>
                         <description>Activity coefficient for aqueous CH4</description>
+                    </param>
+                    <param name="par_bio_remin_gammaFe2">
+            <value datatype="real">0.23</value>
+                        <description>Activity coefficient for aqueous Fe2+</description>
+                    </param>
+                    <param name="par_bio_remin_gammaH">
+            <value datatype="real">0.729</value>
+                        <description>Activity coefficient for aqueous H+ ; Marion et al., 2011, Marine Chemistry</description>
+                    </param>
+                    <param name="par_bio_remin_gammaOH">
+            <value datatype="real">0.69</value>
+                        <description>Activity coefficient for aqueous OH-</description>
+                    </param>
+                     <param name="par_bio_remin_gammaSiO2">
+            <value datatype="real">1.13</value>
+                        <description>Activity coefficient for aqueous SiO2</description>
                     </param>
                     <param name="ctrl_bio_remin_POC_fixed">
 			<value datatype="boolean">.true.</value>
@@ -4620,6 +4668,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
 						<value datatype="real">1.17</value>
                         <description>exponent relating e-folding depth to ecogem size class [Stemmann et al 2004]</description>
                     </param>
+                    <param name="ctrl_bio_remin_ecogemMLD">
+                       <value datatype="boolean">.false.</value>
+                        <description>Dilute tracers across the mixed layer</description>
+                    </param>
 <!-- kinetics -->
                     <param name="par_bio_remin_k_O2">
                         <value datatype="real">1.0</value>
@@ -4685,6 +4737,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                     <param name="ctrl_scav_H2S_dt_old">
                        <value datatype="boolean">.true.</value>
                         <description>Old local residence time in layer for H2S?</description>
+                    </param>
+                    <param name="ctrl_bio_remin_negO2_fix">
+                       <value datatype="boolean">.false.</value>
+                        <description>Fix for negative O2 ... ?</description>
                     </param>
 <!-- N -->
                     <param name="par_bio_remin_kNH4toNO2">
@@ -5082,8 +5138,28 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                         <description>Minimum ohmega threshold for precip</description>
                     </param>
                     <param name="par_d56Fe_FeCO3_alpha">
-			<value datatype="real">1.0005</value>
+			<value datatype="real">0.9997</value>
                         <description>fractionation factor d56/54 Fe in FeCO3 precipitation</description>
+                    </param>
+                    <param name="par_bio_Fe3Si2O4precip_sf">
+			<value datatype="real">6.133e-09</value>
+                        <description>kinetic factor for Fe3Si2O4 precipitation in M yr-1 [Rasmussen et al. 2019]</description>
+                    </param>
+                    <param name="par_bio_Fe3Si2O4precip_exp">
+			<value datatype="real">1.856</value>
+                        <description>Rate law power for Fe3Si2O4 precipitation [Rasmussen et al. 2019]</description>
+                    </param>
+                    <param name="par_bio_Fe3Si2O4precip_abioticohm_cte">
+			<value datatype="real">3.98e27</value>
+                        <description>Ohmega constant for Fe3Si2O4 precip [Tosca et al. 2016]</description>
+                    </param>
+                    <param name="par_d56Fe_Fe3Si2O4_alpha">
+			<value datatype="real">1.0</value>
+                        <description>fractionation factor d56/54 Fe in Fe3Si2O4 precipitation</description>
+                    </param>
+                    <param name="par_bio_Fe3Si2O4precip_cSi">
+			<value datatype="real">2.2e-3</value>
+                        <description>assumed SiO2 concentration in diatom-free ocean</description>
                     </param>
                     <param name="ctrl_bio_FeOOHprecip_explicit">
 			<value datatype="boolean">.true.</value>
@@ -5106,7 +5182,7 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                         <description>fractionation factor d56/54 Fe during Fe2 reoxidation</description>
                     </param>
                     <param name="par_d56Fe_Fered_alpha">
-			<value datatype="real">1.002</value>
+			<value datatype="real">0.9987</value>
                         <description>fractionation factor d56/54 Fe during Fe2 reoxidation</description>
                     </param>
                     <param name="par_d56Fe_FeOOH_alpha">
@@ -5118,7 +5194,7 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                         <description>kinetic constant for Fe2 re-oxidation in M-1 yr-1</description>
                     </param>
                     <param name="par_d56Fe_Fe2ox_alpha">
-			<value datatype="real">0.9991</value>
+			<value datatype="real">1.0008</value>
                         <description>fractionation factor d56/54 Fe during Fe2 reoxidation</description>
                     </param>
                     <param name="par_bio_FeS_sf">
@@ -5150,11 +5226,11 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                         <description>MM type limiting factor for FeS2 precipitation [was: K_lim_PYR]</description>
                     </param>
                     <param name="par_d56Fe_FeS2_alpha">
-			<value datatype="real">1.0022</value>
+			<value datatype="real">0.9978</value>
                         <description>fractionation factor d56/54 Fe in FeS2 precipitation</description>
                     </param>
                     <param name="par_d34S_FeS2_alpha">
-			<value datatype="real">1</value>
+			<value datatype="real">1.0000</value>
                         <description>fractionation factor d34/32 S in FeS2 precipitation</description>
                     </param>
                     <param name="ctrl_bio_FeS2precip_explicit">
@@ -5352,6 +5428,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                     <param name="ctrl_bio_preformed">
 			<value datatype="boolean">.false.</value>
                         <description>Create pre-formed tracers? (requires #x numerical tracers)</description>
+                    </param>
+                    <param name="ctrl_bio_preformed_CsoftPOConly">
+			<value datatype="boolean">.false.</value>
+                        <description>Only include POC remin in Csoft (exclude DOC)? (requires #9 numerical tracer)</description>
                     </param>
                     <param name="ctrl_bio_remin_redox_save">
 			<value datatype="boolean">.false.</value>
@@ -6556,6 +6636,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
 			<value datatype="boolean">.false.</value>
                         <description>Automatic ocean age tracer?</description>
                     </param>
+                    <param name="ctrl_force_ocn_age1">
+			<value datatype="boolean">.false.</value>
+                        <description>Or ... automatic ocean age single-tracer tracer?</description>
+                    </param>
 <!-- TRANSPORT MATRIX  -->
 		<param name="ctrl_data_diagnose_TM">
 			<value datatype="boolean">.false.</value>
@@ -7223,6 +7307,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
 			<value datatype="real">-15.0</value>
                         <description>Li clay formation sink 7Li epsilon (o/oo)</description>
                     </param>
+                    <param name="ctrl_sed_clay_7Li_epsilon_fixed">
+			<value datatype="boolean">.true.</value>
+                        <description>fixed (non T-dependent) MACC 7Li epsilon?  </description>
+                    </param> 
                     <param name="par_sed_hydroip_fCa">
 			<value datatype="real">0.0</value>
                         <description>hydrothermal Ca flux (mol yr-1) -- 2.0E12 in Blattler et al. [2011] but set to zero here as a default</description>
@@ -8412,6 +8500,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
 			<value datatype="boolean">.false.</value>
 	                  <description>restrict MLD for mean light calculation?</description>
                     </param>
+                    <param name="ctrl_PARseaicelimit">
+			<value datatype="boolean">.false.</value>
+	                  <description>PAR attenutation by sea-ice cover?</description>
+                    </param>
        <!-- Grazing parameters -->  
                     <param name="trophic_tradeoff">
 			<value datatype="real">1.0</value>
@@ -8514,6 +8606,10 @@ par_bio_red_PC_alpha2 scales the offset of 6.0e-3 of Galbraith & Martiny, 2015 C
                     <param name="beta_mort_c">
 			<value datatype="real">100.0</value>
 	                  <description>Fraction mortality to dissolved - midpoint vol.</description>
+                    </param>
+                    <param name="par_beta_POCtoDOC">
+			<value datatype="real">1.0</value>
+	                  <description>modifier of the partitioning of C into POM vs. DOM</description>
                     </param>
 <!-- initial fractional abundance of particulate export -->  
                     <param name="par_bio_remin_POC_frac2">
