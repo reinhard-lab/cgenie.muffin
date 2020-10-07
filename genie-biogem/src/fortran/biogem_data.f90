@@ -320,8 +320,12 @@ CONTAINS
        print*,'Planktic foram 13C fractionation scheme ID string   : ',opt_bio_foram_p_13C_delta
        print*,'44/40Ca fractionation between Ca and CaCO3          : ',par_d44Ca_CaCO3_epsilon
        print*,'88/86Sr fractionation between Sr and SrCO3          : ',par_d88Sr_SrCO3_epsilon
+       print*,'dissimilatory iron reduction fractionation          : ',par_d56Fe_Corg_FeOOH_epsilon  
        print*,'methanogenesis fractionation                        : ',par_d13C_Corg_CH4_epsilon
        print*,'sulphate reduction S-fractionation                  : ',par_d34S_Corg_SO4_epsilon
+       print*,'AOM S-fractionation                                 : ',par_d34S_AOM_alpha
+       print*,'aerobic sulphide oxidation S-fractionation          : ',par_d34S_AerSox_alpha
+       print*,'iron-mediated sulphide oxidation S-fractionation    : ',par_d34S_ISO_alpha
        print*,'N2 fixation 15N fractionation                       : ',par_bio_uptake_dN2_epsilon
        print*,'NH4 assimilation 15N fractionation                  : ',par_bio_uptake_dNH4_epsilon
        print*,'NO3 uptake 15N fractionation                        : ',par_bio_uptake_dNO3_epsilon
@@ -450,6 +454,7 @@ CONTAINS
        print*,'Number of timesteps in sub-inteval saving           : ',par_data_save_slice_n
        print*,'Auto save at run end?                               : ',ctrl_data_save_slice_autoend
        print*,'Save cdrmip data (only)?                            : ',ctrl_data_save_slice_cdrmip
+       print*,'Update carbonate chemistry for saving?              : ',ctrl_data_save_slice_carb_update
        ! --- DATA SAVING: TIME-SERIES -------------------------------------------------------------------------------------------- !
        print*,'--- BIOGEM DATA SAVING: TIME-SERIES ----------------'
        print*,'Atmospheric (interface) composition?                : ',ctrl_data_save_sig_ocnatm
@@ -954,19 +959,21 @@ CONTAINS
   ! ****************************************************************************************************************************** !
   !
   SUBROUTINE sub_init_redox()
+    ! NOTE: allocate sufficient array places for all potential transformations
+    !       also: a generous potential string length for automatically-generated variable names
     USE biogem_lib
     ! -------------------------------------------------------- !
     ! DEFINE LOCAL VARIABLES
     ! -------------------------------------------------------- !
     integer::n
-    CHARACTER(len=31),DIMENSION(:),ALLOCATABLE::loc_string     !
+    CHARACTER(len=63),DIMENSION(:),ALLOCATABLE::loc_string     !
     integer::lo,ls
     integer::loc_m,loc_tot_m
     ! -------------------------------------------------------- !
     ! INITIALIZE LOCAL VARIABLES
     ! -------------------------------------------------------- !
     n = 0
-    allocate(loc_string(100),STAT=alloc_error)
+    allocate(loc_string(255),STAT=alloc_error)
     ! -------------------------------------------------------- !
     ! COUNT POTENTIAL REDOX REACTIONS
     ! -------------------------------------------------------- !
